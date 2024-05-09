@@ -1,0 +1,101 @@
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.safari.SafariDriver;
+import org.apache.commons.io.FileUtils;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import org.w3c.dom.Element;
+
+public class ResolutionTesting {
+    public static void main(String[] args) {
+        // Set path to WebDriver executables
+        System.setProperty("webdriver.chrome.driver", "drivers/chromedriver.exe");
+        System.setProperty("webdriver.gecko.driver", "drivers/geckodriver.exe");
+        
+        
+        
+        // Initialize WebDriver instances
+        WebDriver chromeDriver = new ChromeDriver();
+        WebDriver firefoxDriver = new FirefoxDriver();
+        //WebDriver safariDriver = new SafariDriver();
+
+        // Load site map XML and extract URLs
+        String sitemapUrl = "https://www.getcalley.com/page-sitemap.xml";
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(sitemapUrl);
+            NodeList urlNodes = document.getElementsByTagName("url");
+            for (int i = 0; i < urlNodes.getLength(); i++) {
+                Node urlNode = urlNodes.item(i);
+                if (urlNode.getNodeType() == Node.ELEMENT_NODE) {
+                	String pageUrl = ((Element) urlNode).getElementsByTagName("loc").item(0).getTextContent();
+
+
+                    // Navigate to the page URL
+                    chromeDriver.get(pageUrl);
+                    firefoxDriver.get(pageUrl);
+                   // safariDriver.get(pageUrl);
+                    // Capture screenshots for desktop resolutions
+                    captureScreenshot(chromeDriver, "Chrome", "Desktop", "1920x1080", pageUrl);
+                    captureScreenshot(firefoxDriver, "Firefox", "Desktop", "1920x1080", pageUrl);
+                   // captureScreenshot(safariDriver, "Safari", "Desktop", "1920x1080", pageUrl);
+                    captureScreenshot(chromeDriver, "Chrome", "Desktop", "1366x768", pageUrl);
+                    captureScreenshot(firefoxDriver, "Firefox", "Desktop", "1366x768", pageUrl);
+//                    captureScreenshot(safariDriver, "Safari", "Desktop", "1366x768", pageUrl);
+                    captureScreenshot(chromeDriver, "Chrome", "Desktop", "1536x864", pageUrl);
+                    captureScreenshot(firefoxDriver, "Firefox", "Desktop", "1536x864", pageUrl);
+//                    captureScreenshot(safariDriver, "Safari", "Desktop", "1536x864", pageUrl);
+                    // Capture screenshots for mobile resolutions
+                    captureScreenshot(chromeDriver, "Chrome", "Mobile", "360x640", pageUrl);
+                    captureScreenshot(firefoxDriver, "Firefox", "Mobile", "360x640", pageUrl);
+//                    captureScreenshot(safariDriver, "Safari", "Mobile", "360x640", pageUrl);
+                    captureScreenshot(chromeDriver, "Chrome", "Mobile", "414x896", pageUrl);
+                    captureScreenshot(firefoxDriver, "Firefox", "Mobile", "414x896", pageUrl);
+//                    captureScreenshot(safariDriver, "Safari", "Mobile", "414x896", pageUrl);
+                    captureScreenshot(chromeDriver, "Chrome", "Mobile", "375x667", pageUrl);
+                    captureScreenshot(firefoxDriver, "Firefox", "Mobile", "375x667", pageUrl);
+//                    captureScreenshot(safariDriver, "Safari", "Mobile", "375x667", pageUrl);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Quit WebDriver instances
+        chromeDriver.quit();
+        firefoxDriver.quit();
+//        safariDriver.quit();
+    }
+
+    public static void captureScreenshot(WebDriver driver, String browser, String deviceType, String resolution, String pageUrl) {
+        try {
+            // Capture screenshot
+            File screenshotFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            // Define output folder path
+            String outputFolder = "screenshots/" + browser + "/" + deviceType + "/" + resolution + "/";
+            // Create output folder if it doesn't exist
+            new File(outputFolder).mkdirs();
+            // Extract page name from URL for filename
+            String pageName = pageUrl.substring(pageUrl.lastIndexOf("/") + 1);
+            // Generate filename with date-time stamp
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String fileName = outputFolder + pageName + "_" + timestamp + ".png";
+            // Save screenshot
+            FileUtils.copyFile(screenshotFile, new File(fileName));
+            System.out.println("Screenshot captured: " + fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
